@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DAFTAR REMEDIAL SEMESTER</title>
+  <link rel="icon" href="https://i.imgur.com/VDy2lSE.png" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #f8f9fa;
+      overflow: hidden;
+    }
+
+    .iframe-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="iframe-container">
+    <iframe
+      id="app"
+      src="https://script.google.com/macros/s/AKfycbzA99v6Ey5UATKJh2LFE5_XNLjolccRzxqqkymLo4cvmrazX9MI3WR6HdAVjobB-_z-/exec"
+      scrolling="no"
+      allowfullscreen="true"
+      webkitallowfullscreen="true"
+      mozallowfullscreen="true">
+    </iframe>
+  </div>
+
+  <!-- Script untuk menyesuaikan tinggi otomatis -->
+  <script>
+    const iframe = document.getElementById('app');
+
+    function resizeIframe() {
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        const contentHeight = iframeDoc.documentElement.scrollHeight || iframeDoc.body.scrollHeight;
+        
+        // Beri sedikit tambahan agar tombol submit tidak terpotong
+        iframe.style.height = (contentHeight + 20) + 'px';
+      } catch (e) {
+        // Jika gagal (cross-origin), pakai fallback full height
+        console.log("Cross-origin restriction, using full height");
+      }
+    }
+
+    iframe.onload = resizeIframe;
+    
+    // Coba resize lagi setelah beberapa detik (jika konten dinamis)
+    setTimeout(resizeIframe, 1500);
+  </script>
+</body>
+</html>
