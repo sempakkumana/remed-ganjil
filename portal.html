@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<!-- UMSU_REMEDIAL_PORTAL_V130 -->
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#003087">
+    <title>Portal Mahasiswa Remedial</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+    <style>
+        :root {
+            --primary-color: #003087;
+            --primary-hover: #00205b;
+        }
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .text-primary { color: var(--primary-color) !important; }
+        .hover\:bg-primaryHover:hover { background-color: var(--primary-hover) !important; }
+        body {
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body { width: 100%; overflow-x: hidden; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .hero {
+            background: linear-gradient(135deg, #003087 0%, #003d9e 55%, #0a4fb8 100%);
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .status-acc { background-color: #d9ead3; color: #1e7b34; }
+        .status-rejected { background-color: #fce5cd; color: #b45309; }
+        .status-pending { background-color: #e5e7eb; color: #4b5563; }
+        #fatalBanner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 999;
+            background: #b91c1c;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            body { font-size: 16px; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 font-sans min-h-screen flex flex-col">
+    <div id="fatalBanner" class="hidden"></div>
+
+    <div class="hero text-white pb-12 pt-8 px-4 text-center">
+        <img src="https://i.imgur.com/VDy2lSE.png" alt="Logo UMSU" class="w-16 mx-auto mb-3" loading="lazy">
+        <h1 class="text-xl font-extrabold tracking-tight">Portal Mahasiswa</h1>
+        <p class="text-xs opacity-90 mt-1">Remedial Semester Genap 2025-2026 - FKIK UMSU</p>
+    </div>
+
+    <div class="w-full max-w-xl mx-auto p-4 -mt-6 flex-1">
+
+        <!-- SEARCH CARD -->
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-primary">
+            <h2 class="font-bold text-primary mb-1">Cek Status Pendaftaran</h2>
+            <p class="text-xs text-gray-500 mb-4">Masukkan NPM (10 digit) untuk melihat status pendaftaran remedial Anda.</p>
+
+            <div class="flex gap-2">
+                <div class="flex-1">
+                    <input type="text" id="npmInput" inputmode="numeric" maxlength="10" placeholder="Masukkan NPM"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                </div>
+                <button id="checkBtn" type="button"
+                        class="bg-primary text-white font-bold px-5 py-3 rounded-lg shadow flex items-center gap-2">
+                    <i class="material-icons text-lg">search</i>
+                    <span>Cek</span>
+                </button>
+            </div>
+            <small id="searchInfo" class="block mt-2 text-xs font-semibold text-gray-500"></small>
+        </div>
+
+        <!-- RESULT CONTAINER -->
+        <div id="resultContainer" class="mt-4"></div>
+
+        <div class="text-center mt-6">
+            <a href="#" id="backHome" target="_top" class="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-primary no-underline">
+                <i class="material-icons text-sm">arrow_back</i> Kembali ke Beranda
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // ============ Base URL (link absolut untuk GAS iframe) ============
+        function appBaseUrl() {
+            var b = '<?= ScriptApp.getService().getUrl() ?>';
+            if (b && (b.charAt(0) !== '<' || b.charAt(1) !== '?')) return b;
+            try {
+                var loc = window.top.location;
+                if (loc && /^https?:$/i.test(loc.protocol)) {
+                    return loc.origin + loc.pathname;
+                }
+            } catch (e) { /* cross-origin */ }
+            return '';
+        }
+        var BASE = appBaseUrl();
+        if (BASE) {
+            var backHome = document.getElementById('backHome');
+            if (backHome) backHome.href = BASE + '?page=home';
+        }
+
+        // ============ Error surfacing ============
+        window.onerror = function (msg, src, line) {
+            try {
+                var el = document.getElementById('fatalBanner');
+                if (el) {
+                    el.textContent = 'Error JavaScript: ' + String(msg) + ' (baris ' + line + ')';
+                    el.classList.remove('hidden');
+                }
+            } catch (e) { /* ignore */ }
+        };
+
+        function showError(msg) {
+            try {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Error', text: String(msg) });
+                } else {
+                    alert(String(msg));
+                }
+            } catch (e) {
+                alert(String(msg));
+            }
+        }
+
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            document.body.innerHTML =
+                '<div class="min-h-screen flex items-center justify-center p-4 text-center">' +
+                '<p class="text-gray-600 font-semibold">Akses Ditolak. Buka aplikasi ini melalui link resmi UMSU.</p></div>';
+        }
+
+        function serverCall(fnName, args, onOk) {
+            if (typeof google === 'undefined' || !google.script || !google.script.run) {
+                showError('Koneksi ke Google Apps Script tidak tersedia.');
+                return;
+            }
+            if (typeof google.script.run[fnName] !== 'function') {
+                showError('Fungsi backend "' + fnName + '" belum ada di Code.gs yang ter-deploy. ' +
+                    'Salin ulang isi codegs.js ke file Code.gs, lalu buat Deployment versi baru.');
+                return;
+            }
+            var btn = document.getElementById('checkBtn');
+            var info = document.getElementById('searchInfo');
+            info.textContent = 'Memproses...';
+            info.className = 'block mt-2 text-xs font-semibold text-blue-500';
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    info.textContent = '';
+                    onOk && onOk(res);
+                })
+                .withFailureHandler(function (err) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    info.textContent = '';
+                    showError('Gagal menghubungi server: ' + String(err));
+                })
+                [fnName].apply(null, args || []);
+        }
+
+        var npmInput = document.getElementById('npmInput');
+        var checkBtn = document.getElementById('checkBtn');
+        var searchInfo = document.getElementById('searchInfo');
+        var resultContainer = document.getElementById('resultContainer');
+
+        function statusBadge(status) {
+            if (status === 'acc') return '<span class="status-badge status-acc"><i class="material-icons" style="font-size:0.8rem;">check_circle</i> Disetujui (ACC)</span>';
+            if (status === 'rejected') return '<span class="status-badge status-rejected"><i class="material-icons" style="font-size:0.8rem;">cancel</i> Tidak ACC</span>';
+            return '<span class="status-badge status-pending"><i class="material-icons" style="font-size:0.8rem;">schedule</i> Menunggu</span>';
+        }
+
+        function fmtDate(v) {
+            if (!v) return '-';
+            try {
+                var d = new Date(v);
+                if (isNaN(d.getTime())) return String(v);
+                return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) +
+                    ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            } catch (e) { return String(v); }
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function escAttr(s) { return esc(s); }
+
+        function renderResult(data) {
+            if (data.status === 'error') {
+                resultContainer.innerHTML =
+                    '<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-center">' +
+                    '<i class="material-icons text-4xl text-red-500">error_outline</i>' +
+                    '<p class="font-bold text-red-700 mt-2">Terjadi Kesalahan</p>' +
+                    '<p class="text-xs text-red-600 mt-1">' + esc(String(data.message || '')) + '</p></div>';
+                return;
+            }
+
+            if (!data.registered) {
+                resultContainer.innerHTML =
+                    '<div class="bg-white rounded-xl shadow-lg p-6 text-center border-t-4 border-amber-400">' +
+                    '<i class="material-icons text-5xl text-amber-500">person_search</i>' +
+                    '<h3 class="font-bold text-gray-800 mt-3">Data tidak ditemukan</h3>' +
+                    '<p class="text-sm text-gray-500 mt-2">NPM <strong>' + esc(data.npm || '-') + '</strong> belum terdaftar pada pendaftaran remedial ini.</p>' +
+                    '<a href="' + BASE + '?page=index" target="_top" class="inline-block mt-4 bg-primary text-white font-bold px-5 py-3 rounded-lg shadow no-underline">' +
+                    '<i class="material-icons align-middle text-lg" style="vertical-align:middle;">assignment</i>&nbsp;Daftar Remedial</a>' +
+                    '</div>';
+                return;
+            }
+
+            var approved = 0, rejected = 0, pending = 0;
+            for (var mi = 0; mi < (data.mkStatus || []).length; mi++) {
+                var m = data.mkStatus[mi];
+                if (m.status === 'acc') approved++;
+                else if (m.status === 'rejected') rejected++;
+                else pending++;
+            }
+
+            var mkHtml = '';
+            for (var mi2 = 0; mi2 < (data.mkStatus || []).length; mi2++) {
+                var mk = data.mkStatus[mi2];
+                var alasanHtml = '';
+                if (mk.status === 'rejected' && mk.alasan) {
+                    alasanHtml = '<p class="text-xs text-orange-700 mt-1 bg-orange-50 border border-orange-200 rounded px-2 py-1">' +
+                        'Alasan: ' + esc(mk.alasan) + '</p>';
+                }
+                mkHtml += '<li class="flex items-start justify-between gap-2 border-b border-gray-100 py-2">' +
+                    '<div class="min-w-0 flex-1">' +
+                    '<p class="text-sm font-medium text-gray-800" style="overflow-wrap:anywhere;">' + esc(mk.mk) + '</p>' +
+                    '<p class="text-xs text-gray-400">Semester ' + esc(mk.semester) + '</p>' +
+                    alasanHtml +
+                    '</div>' + statusBadge(mk.status) + '</li>';
+            }
+
+            var overallHtml = '';
+            if (data.acc) {
+                overallHtml =
+                    '<div class="bg-green-50 border border-green-200 rounded-xl p-4 mt-4 flex items-start gap-3">' +
+                    '<i class="material-icons text-3xl text-green-600">verified</i>' +
+                    '<div>' +
+                    '<p class="font-bold text-green-700">Pendaftaran Anda DITERIMA (ACC)</p>' +
+                    '<p class="text-xs text-green-700 mt-1">Total SKS disetujui: <strong>' + esc(data.totalSks || '-') + '</strong></p>';
+                if (data.links && data.links[0]) {
+                    overallHtml += '<p class="text-xs text-green-700 mt-1">Link bukti: <a href="' + escAttr(data.links[0]) + '" target="_blank" rel="noopener" class="underline">Lihat</a></p>';
+                }
+                overallHtml += '</div></div>';
+            }
+
+            var paymentHtml = '';
+            if (data.payment === 'SUDAH') {
+                paymentHtml =
+                    '<div class="bg-green-50 border border-green-200 rounded-xl p-4 mt-4 flex items-start gap-3">' +
+                    '<i class="material-icons text-3xl text-green-600">payments</i>' +
+                    '<div>' +
+                    '<p class="font-bold text-green-700">Bukti Pembayaran SUDAH diunggah</p>' +
+                    '<p class="text-xs text-green-700 mt-1">Tanggal: ' + fmtDate(data.pembayaranInfo && data.pembayaranInfo.timestamp) + '</p>';
+                if (data.pembayaranInfo && data.pembayaranInfo.buktiPembayaran) {
+                    paymentHtml += '<p class="text-xs text-green-700 mt-1">Bukti: <a href="' + escAttr(data.pembayaranInfo.buktiPembayaran) + '" target="_blank" rel="noopener" class="underline">Lihat bukti pembayaran</a></p>';
+                }
+                paymentHtml += '</div></div>';
+            } else if (data.acc) {
+                paymentHtml =
+                    '<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4 flex items-start gap-3">' +
+                    '<i class="material-icons text-3xl text-amber-600">upload_file</i>' +
+                    '<div class="flex-1">' +
+                    '<p class="font-bold text-amber-700">Belum unggah bukti pembayaran</p>' +
+                    '<p class="text-xs text-amber-700 mt-1">Silakan unggah bukti pendaftaran dan bukti pembayaran.</p>' +
+                    '<a href="' + BASE + '?page=upload" target="_top" class="inline-block mt-3 bg-primary text-white font-bold px-4 py-2 rounded-lg shadow text-sm no-underline">' +
+                    '<i class="material-icons align-middle text-base" style="vertical-align:middle;">cloud_upload</i>&nbsp;Unggah Sekarang</a>' +
+                    '</div></div>';
+            }
+
+            resultContainer.innerHTML =
+                '<div class="bg-white rounded-xl shadow-lg p-5 border-t-4 border-primary">' +
+                '<div class="flex items-center justify-between">' +
+                '<div>' +
+                '<h3 class="font-bold text-gray-800 text-lg">' + esc(data.nama || '-') + '</h3>' +
+                '<p class="text-xs text-gray-500">NPM: ' + esc(data.npm || '-') + ' | Angkatan: ' + esc(data.angkatan || '-') + '</p>' +
+                '</div>' +
+                '<img src="https://i.imgur.com/VDy2lSE.png" alt="logo" class="w-12" loading="lazy">' +
+                '</div>' +
+                '<div class="grid grid-cols-4 gap-2 mt-4 text-center">' +
+                '<div class="bg-blue-50 rounded-lg py-2"><p class="text-xl font-bold text-primary">' + approved + '</p><p class="text-[10px] text-gray-500 font-semibold">Disetujui</p></div>' +
+                '<div class="bg-orange-50 rounded-lg py-2"><p class="text-xl font-bold text-orange-600">' + rejected + '</p><p class="text-[10px] text-gray-500 font-semibold">Ditolak</p></div>' +
+                '<div class="bg-gray-100 rounded-lg py-2"><p class="text-xl font-bold text-gray-600">' + pending + '</p><p class="text-[10px] text-gray-500 font-semibold">Menunggu</p></div>' +
+                '<div class="bg-green-50 rounded-lg py-2"><p class="text-xl font-bold text-green-600">' + (data.mataKuliah || []).length + '</p><p class="text-[10px] text-gray-500 font-semibold">Total MK</p></div>' +
+                '</div>' +
+                '<div class="mt-4 text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1">' +
+                '<span>WA Status: <strong>' + esc(data.waStatus || '-') + '</strong></span>' +
+                '<span>Pembayaran: <strong>' + (data.payment === 'SUDAH' ? 'SUDAH' : 'BELUM') + '</strong></span>' +
+                '<span>Terdaftar: ' + fmtDate(data.timestamp) + '</span>' +
+                '</div>' +
+                overallHtml +
+                paymentHtml +
+                '<h4 class="font-bold text-primary mt-5 mb-1">Mata Kuliah yang Didaftarkan</h4>' +
+                '<ul class="mt-2">' + mkHtml + '</ul>' +
+                '</div>';
+        }
+
+        function doCheck() {
+            var npm = npmInput.value.trim();
+            if (!/^[0-9]{10}$/.test(npm)) {
+                searchInfo.textContent = 'NPM harus 10 digit angka.';
+                searchInfo.className = 'block mt-2 text-xs font-semibold text-red-500';
+                return;
+            }
+            serverCall('getStudentPortalData', [npm], renderResult);
+        }
+
+        checkBtn.addEventListener('click', doCheck);
+        npmInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doCheck(); });
+    </script>
+</body>
+</html>

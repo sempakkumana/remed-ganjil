@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!-- UMSU_REMEDIAL_HOME_V130 -->
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#003087">
+    <title>Remedial FKIK UMSU</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #003087;
+            --primary-hover: #00205b;
+        }
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .text-primary { color: var(--primary-color) !important; }
+        .hover\:bg-primaryHover:hover { background-color: var(--primary-hover) !important; }
+        body {
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body { width: 100%; overflow-x: hidden; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .hero {
+            background: linear-gradient(135deg, #003087 0%, #003d9e 55%, #0a4fb8 100%);
+        }
+        .card-link {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .card-link:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 48, 135, 0.15);
+            border-color: var(--primary-color) !important;
+        }
+        .card-link:hover .card-icon {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        .card-icon {
+            transition: all 0.2s ease-in-out;
+        }
+        @media (max-width: 480px) {
+            body { font-size: 16px; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 font-sans min-h-screen flex flex-col">
+    <div class="hero text-white pb-12 pt-10 px-4 text-center">
+        <img src="https://i.imgur.com/VDy2lSE.png" alt="Logo UMSU" class="w-20 mx-auto mb-4" loading="lazy">
+        <h1 class="text-2xl font-extrabold tracking-tight">Remedial FKIK UMSU</h1>
+        <p class="text-sm opacity-90 mt-1 font-medium">Semester Genap 2025-2026</p>
+        <p class="text-xs opacity-75 mt-1">Fakultas Kedokteran & Ilmu Kesehatan UMSU</p>
+    </div>
+
+    <div class="w-full max-w-xl mx-auto p-4 -mt-8 flex-1">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-primary">
+            <p class="text-sm text-gray-600 text-center mb-6">Silakan pilih layanan sesuai kebutuhan Anda.</p>
+
+            <div class="space-y-4">
+                <a href="#" data-nav="portal" target="_top"
+                   class="card-link block border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4 no-underline">
+                    <div class="card-icon flex items-center justify-center w-14 h-14 rounded-xl bg-blue-50 text-primary">
+                        <i class="material-icons text-3xl">account_circle</i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800">Portal Mahasiswa</h2>
+                        <p class="text-xs text-gray-500 mt-1">Cek status pendaftaran, MK yang disetujui/ditolak, dan status pembayaran Anda.</p>
+                    </div>
+                    <i class="material-icons ml-auto text-gray-400">chevron_right</i>
+                </a>
+
+                <a href="#" data-nav="index" target="_top"
+                   class="card-link block border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4 no-underline">
+                    <div class="card-icon flex items-center justify-center w-14 h-14 rounded-xl bg-green-50 text-green-700">
+                        <i class="material-icons text-3xl">assignment</i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800">Pendaftaran Remedial</h2>
+                        <p class="text-xs text-gray-500 mt-1">Formulir pendaftaran remedial untuk mahasiswa yang belum mendaftar.</p>
+                    </div>
+                    <i class="material-icons ml-auto text-gray-400">chevron_right</i>
+                </a>
+
+                <a href="#" data-nav="upload" target="_top"
+                   class="card-link block border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4 no-underline">
+                    <div class="card-icon flex items-center justify-center w-14 h-14 rounded-xl bg-amber-50 text-amber-600">
+                        <i class="material-icons text-3xl">cloud_upload</i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800">Unggah Bukti Pembayaran</h2>
+                        <p class="text-xs text-gray-500 mt-1">Unggah bukti pendaftaran dan bukti pembayaran setelah dinyatakan ACC.</p>
+                    </div>
+                    <i class="material-icons ml-auto text-gray-400">chevron_right</i>
+                </a>
+
+                <a href="#" data-nav="dashboard" target="_top"
+                   class="card-link block border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4 no-underline">
+                    <div class="card-icon flex items-center justify-center w-14 h-14 rounded-xl bg-red-50 text-red-700">
+                        <i class="material-icons text-3xl">admin_panel_settings</i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800">Dashboard Admin</h2>
+                        <p class="text-xs text-gray-500 mt-1">Khusus admin prodi. Validasi MK, monitoring mahasiswa, dan status pembayaran.</p>
+                    </div>
+                    <i class="material-icons ml-auto text-gray-400">chevron_right</i>
+                </a>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-6">Fakultas Kedokteran dan Ilmu Kesehatan UMSU</p>
+    </div>
+
+    <script>
+        function appBaseUrl() {
+            var b = '<?= ScriptApp.getService().getUrl() ?>';
+            if (b && (b.charAt(0) !== '<' || b.charAt(1) !== '?')) return b;
+            try {
+                var loc = window.top.location;
+                if (loc && /^https?:$/i.test(loc.protocol)) {
+                    return loc.origin + loc.pathname;
+                }
+            } catch (e) { /* cross-origin */ }
+            return '';
+        }
+        var BASE = appBaseUrl();
+        if (BASE) {
+            var navs = document.querySelectorAll('a[data-nav]');
+            for (var i = 0; i < navs.length; i++) {
+                navs[i].href = BASE + '?page=' + navs[i].getAttribute('data-nav');
+            }
+        } else if (typeof google === 'undefined') {
+            document.body.innerHTML =
+                '<div class="min-h-screen flex items-center justify-center p-4 text-center">' +
+                '<p class="text-gray-600 font-semibold">Akses Ditolak. Buka aplikasi ini melalui link resmi UMSU.</p></div>';
+        }
+    </script>
+</body>
+</html>

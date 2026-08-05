@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<!-- UMSU_REMEDIAL_DASHBOARD_V130 -->
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#003087">
+    <title>Dashboard Admin Remedial</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+    <style>
+        :root {
+            --primary-color: #003087;
+            --primary-hover: #00205b;
+        }
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .text-primary { color: var(--primary-color) !important; }
+        .hover\:bg-primaryHover:hover { background-color: var(--primary-hover) !important; }
+        body {
+            background-color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body { width: 100%; overflow-x: hidden; }
+        *, *::before, *::after { box-sizing: border-box; }
+
+        .tab-btn {
+            white-space: nowrap;
+            padding: 0.6rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .tab-btn:hover { color: var(--primary-color); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .stat-card {
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .table-wrap { overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+        thead th {
+            background-color: var(--primary-color);
+            color: #fff;
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        tbody td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+        tbody tr:hover { background-color: #f8fafc; }
+        .status-select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.3rem 0.4rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+        .badge-green { background:#d9ead3; color:#1e7b34; }
+        .badge-red { background:#fce5cd; color:#b45309; }
+        .badge-gray { background:#e5e7eb; color:#4b5563; }
+        .badge-blue { background:#dbeafe; color:#1d4ed8; }
+        .badge-amber { background:#fef3c7; color:#b45309; }
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .is-hidden {
+            display: none !important;
+        }
+        #fatalBanner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 999;
+            background: #b91c1c;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="text-gray-800 font-sans min-h-screen">
+    <div id="fatalBanner" class="is-hidden"></div>
+
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-white rounded-xl shadow-lg p-7 border-t-4 border-primary">
+            <div class="text-center mb-5">
+                <img src="https://i.imgur.com/VDy2lSE.png" alt="Logo UMSU" class="w-14 mx-auto" loading="lazy">
+                <h1 class="font-extrabold text-primary text-lg mt-2">Dashboard Admin</h1>
+                <p class="text-xs text-gray-500 mt-1">Remedial FKIK UMSU</p>
+            </div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Password Admin</label>
+            <input type="password" id="loginPassword" placeholder="Masukkan password"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm mb-4">
+            <button id="loginBtn" type="button"
+                    class="w-full bg-primary text-white font-bold py-3 rounded-lg shadow-lg hover:bg-primaryHover">
+                Masuk
+            </button>
+            <p id="loginInfo" class="text-center text-xs font-semibold text-red-500 mt-3 min-h-[1rem]"></p>
+            <div class="text-center mt-3">
+                <a href="#" id="backHome" target="_top" class="text-xs text-gray-400 hover:text-primary no-underline">Kembali ke Beranda</a>
+            </div>
+            <p id="backendStatus" class="text-center text-[10px] text-gray-400 mt-2"></p>
+            <p class="text-center text-[9px] text-gray-300 mt-1">UI v1.3.0</p>
+        </div>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <div id="mainView" class="is-hidden">
+        <header class="bg-primary text-white">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <img src="https://i.imgur.com/VDy2lSE.png" alt="logo" class="w-9" loading="lazy">
+                    <div>
+                        <h1 class="font-extrabold text-sm leading-tight">Dashboard Admin</h1>
+                        <p class="text-[10px] opacity-80">Remedial FKIK UMSU - Semester Genap 2025/2026</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="refreshBtn" type="button" class="flex items-center gap-1 bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 text-xs font-bold">
+                        <i class="material-icons text-base">refresh</i> Refresh
+                    </button>
+                    <button id="logoutBtn" type="button" class="flex items-center gap-1 bg-red-600 hover:bg-red-700 rounded-lg px-3 py-2 text-xs font-bold">
+                        <i class="material-icons text-base">logout</i> Keluar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- STATS -->
+        <div class="max-w-7xl mx-auto px-4 mt-5">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="stat-card" style="background:linear-gradient(135deg,#003087,#0a4fb8);">
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-wide">Total Mendaftar</p>
+                    <p id="statDaftar" class="text-2xl font-extrabold mt-1">-</p>
+                </div>
+                <div class="stat-card" style="background:linear-gradient(135deg,#1e7b34,#2f9e44);">
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-wide">ACC Final</p>
+                    <p id="statAcc" class="text-2xl font-extrabold mt-1">-</p>
+                </div>
+                <div class="stat-card" style="background:linear-gradient(135deg,#b45309,#d97706);">
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-wide">Upload Pembayaran</p>
+                    <p id="statBayar" class="text-2xl font-extrabold mt-1">-</p>
+                </div>
+                <div class="stat-card" style="background:linear-gradient(135deg,#b91c1c,#dc2626);">
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-wide">Belum Bayar (ACC)</p>
+                    <p id="statBelumBayar" class="text-2xl font-extrabold mt-1">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="max-w-7xl mx-auto px-4 mt-4 bg-white rounded-xl shadow">
+            <div class="flex overflow-x-auto border-b border-gray-200">
+                <div class="tab-btn active" data-tab="monitor">Monitoring</div>
+                <div class="tab-btn" data-tab="validasi">Validasi MK</div>
+                <div class="tab-btn" data-tab="alasan">Alasan</div>
+                <div class="tab-btn" data-tab="wa">WA Queue</div>
+            </div>
+
+            <!-- TAB MONITORING -->
+            <div id="panel-monitor" class="tab-panel active p-4">
+                <div class="flex flex-wrap gap-2 items-center mb-3">
+                    <input type="text" id="monitorSearch" placeholder="Cari NPM / Nama..."
+                           class="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th><th>NPM</th><th>Nama</th><th>MK Dipilih</th><th>MK ACC</th><th>MK Tolak</th>
+                                <th>Semua Diputuskan</th><th>Status ACC</th><th>Link Siap</th><th>SKS</th><th>WA</th><th>Bayar</th><th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monitorBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB VALIDASI -->
+            <div id="panel-validasi" class="tab-panel p-4">
+                <div class="flex flex-wrap gap-2 items-end mb-3">
+                    <div class="flex-1 min-w-[220px]">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Mata Kuliah</label>
+                        <select id="mkSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">-- Pilih MK --</option>
+                        </select>
+                    </div>
+                    <div id="mkInfo" class="text-xs text-gray-500 pb-2"></div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NPM</th><th>Nama Lengkap</th><th>Angkatan</th><th>Status</th><th>Alasan</th><th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="validasiBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB ALASAN -->
+            <div id="panel-alasan" class="tab-panel p-4">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Timestamp</th><th>NPM</th><th>Nama</th><th>Mata Kuliah</th><th>Sheet Admin</th><th>Alasan</th></tr>
+                        </thead>
+                        <tbody id="alasanBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB WA -->
+            <div id="panel-wa" class="tab-panel p-4">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>NPM</th><th>Nama</th><th>No. WA</th><th>SKS</th><th>Status Kirim</th><th>WA Status</th><th>Attempt</th><th>Error</th><th>Dikirim</th></tr>
+                        </thead>
+                        <tbody id="waBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 py-5 text-center text-xs text-gray-400">
+            Fakultas Kedokteran dan Ilmu Kesehatan UMSU
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loadingOverlay" class="loading-overlay is-hidden" style="display:none;">
+        <div class="text-center">
+            <div class="animate-spin inline-block w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+            <p class="text-xs font-bold text-primary mt-2">Memuat data...</p>
+        </div>
+    </div>
+
+    <script>
+        // ============ Error surfacing (jangan sampai layar putih diam-diam) ============
+        function appBaseUrl() {
+            var b = '<?= ScriptApp.getService().getUrl() ?>';
+            if (b && (b.charAt(0) !== '<' || b.charAt(1) !== '?')) return b;
+            try {
+                var loc = window.top.location;
+                if (loc && /^https?:$/i.test(loc.protocol)) {
+                    return loc.origin + loc.pathname;
+                }
+            } catch (e) { /* cross-origin */ }
+            return '';
+        }
+        var BASE = appBaseUrl();
+        if (BASE) {
+            var backHome = document.getElementById('backHome');
+            if (backHome) backHome.href = BASE + '?page=home';
+        }
+
+        window.onerror = function (msg, src, line) {
+            try {
+                showLoading(false);
+                var el = document.getElementById('fatalBanner');
+                if (el) {
+                    el.textContent = 'Error JavaScript: ' + String(msg) + ' (baris ' + line + ')';
+                    el.classList.remove('is-hidden');
+                }
+            } catch (e) { /* ignore */ }
+        };
+
+        function showError(msg) {
+            try {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Error', text: String(msg) });
+                } else {
+                    alert(String(msg));
+                }
+            } catch (e) {
+                alert(String(msg));
+            }
+        }
+
+        function showInfo(title, msg) {
+            try {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'success', title: title, text: msg, timer: 1500, showConfirmButton: false });
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // ============ Storage aman (iframe sandbox bisa memblokir sessionStorage) ============
+        var storage = (function () {
+            var mem = {};
+            try {
+                var t = '__t__';
+                window.sessionStorage.setItem(t, '1');
+                window.sessionStorage.removeItem(t);
+                return {
+                    get: function (k) { try { return window.sessionStorage.getItem(k) || ''; } catch (e) { return mem[k] || ''; } },
+                    set: function (k, v) { try { window.sessionStorage.setItem(k, v); } catch (e) { mem[k] = v; } },
+                    del: function (k) { try { window.sessionStorage.removeItem(k); } catch (e) { delete mem[k]; } }
+                };
+            } catch (e) {
+                return {
+                    get: function (k) { return mem[k] || ''; },
+                    set: function (k, v) { mem[k] = v; },
+                    del: function (k) { delete mem[k]; }
+                };
+            }
+        })();
+
+        // ============ Panggilan server yang aman (selalu tutup loading) ============
+        function serverCall(fnName, args, onOk, silent) {
+            if (typeof google === 'undefined' || !google.script || !google.script.run) {
+                showError('Koneksi ke Google Apps Script tidak tersedia. Buka melalui URL web app GAS.');
+                return;
+            }
+            if (typeof google.script.run[fnName] !== 'function') {
+                showError('Fungsi backend "' + fnName + '" belum ada di Code.gs yang ter-deploy. ' +
+                    'Salin ulang isi codegs.js ke file Code.gs, lalu buat Deployment versi baru.');
+                return;
+            }
+            if (!silent) { showLoading(true); }
+            var timer = setTimeout(function () { showLoading(false); }, 10000);
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    clearTimeout(timer);
+                    showLoading(false);
+                    onOk && onOk(res);
+                })
+                .withFailureHandler(function (err) {
+                    clearTimeout(timer);
+                    showLoading(false);
+                    showError('Gagal menghubungi server: ' + String(err));
+                })
+                [fnName].apply(null, args || []);
+        }
+
+        var TOKEN_KEY = 'adminToken';
+        var token = storage.get(TOKEN_KEY);
+
+        var $ = function (id) { return document.getElementById(id); };
+
+        function showLoading(on) {
+            var overlay = $('loadingOverlay');
+            if (!overlay) return;
+            overlay.classList.toggle('is-hidden', !on);
+            overlay.style.display = on ? 'flex' : 'none';
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function escAttr(s) { return esc(s); }
+
+        function fmtDate(v) {
+            if (!v) return '-';
+            try {
+                var d = new Date(v);
+                if (isNaN(d.getTime())) return String(v);
+                return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' +
+                    d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            } catch (e) { return String(v); }
+        }
+
+        function statusBadge(status) {
+            var s = String(status || '').trim().toUpperCase();
+            if (s === 'ACC' || s === 'TERKIRIM' || s === 'SUDAH' || s === 'YA') {
+                return '<span class="badge badge-green">' + esc(status) + '</span>';
+            }
+            if (s === 'TIDAK ACC' || s === 'REJECTED' || s === 'TIDAK SETUJU' || s === 'GAGAL') {
+                return '<span class="badge badge-red">' + (s === 'GAGAL' ? 'GAGAL' : 'Tidak ACC') + '</span>';
+            }
+            if (s === 'ANTRI') return '<span class="badge badge-amber">ANTRI</span>';
+            if (s === '--' || s === '') return '<span class="badge badge-gray">--</span>';
+            return '<span class="badge badge-blue">' + esc(status) + '</span>';
+        }
+
+        // ============ LOGIN ============
+        function doLogin() {
+            var password = $('loginPassword').value;
+            if (!password) { $('loginInfo').textContent = 'Password wajib diisi.'; return; }
+            $('loginInfo').textContent = 'Memeriksa...';
+            $('loginInfo').className = 'text-center text-xs font-semibold text-blue-500 mt-3 min-h-[1rem]';
+            serverCall('adminLogin', [password], function (res) {
+                if (res.status === 'success') {
+                    token = res.token;
+                    storage.set(TOKEN_KEY, token);
+                    enterDashboard();
+                } else {
+                    $('loginInfo').textContent = res.message || 'Login gagal.';
+                    $('loginInfo').className = 'text-center text-xs font-semibold text-red-500 mt-3 min-h-[1rem]';
+                }
+            });
+        }
+
+        $('loginBtn').addEventListener('click', doLogin);
+        $('loginPassword').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+
+        function applyDashboardData(res) {
+            $('statDaftar').textContent = res.stats.totalDaftar;
+            $('statAcc').textContent = res.stats.totalACC;
+            $('statBayar').textContent = res.stats.totalBayar;
+            $('statBelumBayar').textContent = res.stats.totalBelumBayar;
+            monitorRows = res.rows || [];
+            renderMonitor();
+        }
+
+        function enterDashboard(res) {
+            $('loginView').classList.add('is-hidden');
+            $('mainView').classList.remove('is-hidden');
+            if (res && res.status === 'success') {
+                applyDashboardData(res);
+            } else {
+                loadDashboard();
+            }
+        }
+
+        $('logoutBtn').addEventListener('click', function () {
+            serverCall('adminLogout', [token], function () {
+                storage.del(TOKEN_KEY);
+                token = '';
+                $('mainView').classList.add('is-hidden');
+                $('loginView').classList.remove('is-hidden');
+                $('loginPassword').value = '';
+            });
+        });
+
+        $('refreshBtn').addEventListener('click', loadDashboard);
+
+        // ============ TABS ============
+        var tabButtons = document.querySelectorAll('.tab-btn');
+        for (var tb = 0; tb < tabButtons.length; tb++) {
+            (function (btn) {
+                btn.addEventListener('click', function () {
+                    for (var i = 0; i < tabButtons.length; i++) tabButtons[i].classList.remove('active');
+                    var panels = document.querySelectorAll('.tab-panel');
+                    for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+                    btn.classList.add('active');
+                    $('panel-' + btn.dataset.tab).classList.add('active');
+                    if (btn.dataset.tab === 'validasi') loadMkOptions();
+                    else if (btn.dataset.tab === 'alasan') loadAlasan();
+                    else if (btn.dataset.tab === 'wa') loadWaQueue();
+                });
+            })(tabButtons[tb]);
+        }
+
+        // ============ MONITORING ============
+        var monitorRows = [];
+
+        function loadDashboard() {
+            serverCall('getDashboardData', [token], function (res) {
+                if (res.status === 'error') {
+                    if (/unauthorized/i.test(res.message)) {
+                        storage.del(TOKEN_KEY);
+                        token = '';
+                        $('mainView').classList.add('is-hidden');
+                        $('loginView').classList.remove('is-hidden');
+                        showError('Sesi berakhir. Silakan login kembali.');
+                        return;
+                    }
+                    showError(res.message);
+                    return;
+                }
+                applyDashboardData(res);
+            });
+        }
+
+        function renderMonitor() {
+            var q = ($('monitorSearch').value || '').trim().toLowerCase();
+            var rows = monitorRows.filter(function (r) {
+                return !q || String(r.npm || '').toLowerCase().indexOf(q) !== -1 || String(r.nama || '').toLowerCase().indexOf(q) !== -1;
+            });
+            var body = $('monitorBody');
+            if (!rows.length) {
+                body.innerHTML = '<tr><td colspan="13" class="text-center text-gray-400 py-6">Tidak ada data.</td></tr>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i];
+                html += '<tr>' +
+                    '<td>' + esc(r.no) + '</td>' +
+                    '<td class="font-semibold">' + esc(r.npm) + '</td>' +
+                    '<td>' + esc(r.nama) + '</td>' +
+                    '<td class="text-center">' + esc(r.mkDipilih) + '</td>' +
+                    '<td class="text-center">' + esc(r.mkDisetujui) + '</td>' +
+                    '<td class="text-center">' + esc(r.mkDitolak) + '</td>' +
+                    '<td class="text-center">' + statusBadge(r.semuaDiputuskan) + '</td>' +
+                    '<td class="text-center">' + statusBadge(r.statusBA) + '</td>' +
+                    '<td class="text-center">' + statusBadge(r.linkSiap) + '</td>' +
+                    '<td class="text-center">' + esc(r.totalSks || '-') + '</td>' +
+                    '<td class="text-center">' + statusBadge(r.statusWA) + '</td>' +
+                    '<td class="text-center">' + statusBadge(r.bayarMasuk) + '</td>' +
+                    '<td class="text-gray-500">' + esc(r.keterangan) + '</td>' +
+                    '</tr>';
+            }
+            body.innerHTML = html;
+        }
+
+        $('monitorSearch').addEventListener('input', renderMonitor);
+
+        // ============ VALIDASI MK ============
+        var mkOptions = [];
+        var validasiStudents = [];
+
+        function loadMkOptions() {
+            if (mkOptions.length > 0) return;
+            serverCall('getAdminMkOptions', [token], function (res) {
+                if (res.status === 'error') { showError(res.message); return; }
+                mkOptions = res.options || [];
+                var sel = $('mkSelect');
+                var html = '<option value="">-- Pilih MK --</option>';
+                var lastSem = '';
+                for (var i = 0; i < mkOptions.length; i++) {
+                    var o = mkOptions[i];
+                    if (o.semLabel !== lastSem) {
+                        html += '<option value="" disabled>────────── ' + esc(o.semLabel) + ' ──────────</option>';
+                        lastSem = o.semLabel;
+                    }
+                    html += '<option value="' + escAttr(o.mk) + '">' + esc(o.mk) + (o.sks ? ' (' + esc(o.sks) + ' SKS)' : '') + '</option>';
+                }
+                sel.innerHTML = html;
+            });
+        }
+
+        $('mkSelect').addEventListener('change', function () {
+            var mk = this.value;
+            if (!mk) {
+                $('validasiBody').innerHTML = '';
+                $('mkInfo').textContent = '';
+                return;
+            }
+            var opt = null;
+            for (var i = 0; i < mkOptions.length; i++) { if (mkOptions[i].mk === mk) { opt = mkOptions[i]; break; } }
+            $('mkInfo').textContent = opt ? (opt.semLabel + (opt.sks ? ' | SKS: ' + opt.sks : '')) : '';
+            serverCall('getAdminStudentsByMk', [token, mk], function (res) {
+                if (res.status === 'error') { showError(res.message); return; }
+                validasiStudents = res.students || [];
+                renderValidasi();
+            });
+        });
+
+        function renderValidasi() {
+            var body = $('validasiBody');
+            if (!validasiStudents.length) {
+                body.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-6">Tidak ada mahasiswa yang memilih MK ini.</td></tr>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < validasiStudents.length; i++) {
+                var s = validasiStudents[i];
+                var selOpt = '<option value="--"' + ((s.status === '--' || s.status === '') ? ' selected' : '') + '>--</option>' +
+                    '<option value="ACC"' + (s.status === 'ACC' ? ' selected' : '') + '>ACC</option>' +
+                    '<option value="Tidak ACC"' + (s.status === 'Tidak ACC' ? ' selected' : '') + '>Tidak ACC</option>';
+                html += '<tr>' +
+                    '<td class="font-semibold">' + esc(s.npm) + '</td>' +
+                    '<td>' + esc(s.nama) + '</td>' +
+                    '<td>' + esc(s.angkatan || '-') + '</td>' +
+                    '<td><select class="status-select" data-i="' + i + '">' + selOpt + '</select></td>' +
+                    '<td><input type="text" data-i="' + i + '" class="alasan-input w-full min-w-[140px] px-2 py-1 border border-gray-300 rounded text-xs" placeholder="Alasan (jika tolak)" value="' + escAttr(s.alasan) + '"></td>' +
+                    '<td><button type="button" class="save-btn bg-primary text-white font-bold px-3 py-1.5 rounded-lg text-xs" data-i="' + i + '">Simpan</button></td>' +
+                    '</tr>';
+            }
+            body.innerHTML = html;
+
+            var btns = body.querySelectorAll('.save-btn');
+            for (var b = 0; b < btns.length; b++) {
+                (function (btn) {
+                    btn.addEventListener('click', function () { saveDecision(parseInt(btn.dataset.i, 10)); });
+                })(btns[b]);
+            }
+        }
+
+        function saveDecision(i) {
+            var s = validasiStudents[i];
+            var mk = $('mkSelect').value;
+            var keputusan = document.querySelector('.status-select[data-i="' + i + '"]').value;
+            var alasan = document.querySelector('.alasan-input[data-i="' + i + '"]').value;
+            serverCall('adminSaveDecision', [token, { npm: s.npm, mkName: mk, keputusan: keputusan, alasan: alasan }], function (res) {
+                if (res.status === 'success') {
+                    showInfo('Tersimpan', res.message);
+                    $('mkSelect').dispatchEvent(new Event('change'));
+                    loadDashboard();
+                } else {
+                    showError(res.message);
+                }
+            });
+        }
+
+        // ============ ALASAN ============
+        function loadAlasan() {
+            serverCall('getAlasanList', [token], function (res) {
+                if (res.status === 'error') { showError(res.message); return; }
+                var rows = res.rows || [];
+                var body = $('alasanBody');
+                if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-6">Belum ada penolakan.</td></tr>'; return; }
+                var html = '';
+                for (var i = 0; i < rows.length; i++) {
+                    var r = rows[i];
+                    html += '<tr>' +
+                        '<td>' + fmtDate(r.timestamp) + '</td>' +
+                        '<td class="font-semibold">' + esc(r.npm) + '</td>' +
+                        '<td>' + esc(r.nama) + '</td>' +
+                        '<td>' + esc(r.mk) + '</td>' +
+                        '<td>' + esc(r.adminSheet) + '</td>' +
+                        '<td class="' + (r.alasan ? '' : 'text-orange-600 font-semibold') + '">' + (r.alasan ? esc(r.alasan) : 'Belum diisi') + '</td>' +
+                        '</tr>';
+                }
+                body.innerHTML = html;
+            });
+        }
+
+        // ============ WA QUEUE ============
+        function loadWaQueue() {
+            serverCall('getWaQueueList', [token], function (res) {
+                if (res.status === 'error') { showError(res.message); return; }
+                var rows = res.rows || [];
+                var body = $('waBody');
+                if (!rows.length) { body.innerHTML = '<tr><td colspan="9" class="text-center text-gray-400 py-6">Antrean WA kosong.</td></tr>'; return; }
+                var html = '';
+                for (var i = 0; i < rows.length; i++) {
+                    var r = rows[i];
+                    html += '<tr>' +
+                        '<td class="font-semibold">' + esc(r.npm) + '</td>' +
+                        '<td>' + esc(r.nama) + '</td>' +
+                        '<td>' + esc(r.wa || '-') + '</td>' +
+                        '<td class="text-center">' + esc(r.totalSks || '-') + '</td>' +
+                        '<td class="text-center">' + statusBadge(r.statusKirim) + '</td>' +
+                        '<td class="text-center">' + statusBadge(r.sendStatus) + '</td>' +
+                        '<td class="text-center">' + esc(r.attempt) + '</td>' +
+                        '<td class="max-w-[180px] text-red-500">' + esc(r.lastError || '-') + '</td>' +
+                        '<td>' + fmtDate(r.sentAt || r.updated_at) + '</td>' +
+                        '</tr>';
+                }
+                body.innerHTML = html;
+            });
+        }
+
+        // ============ INIT ============
+        showLoading(false);
+        if (token) {
+            var bootInfo = $('loginInfo');
+            if (bootInfo) {
+                bootInfo.textContent = 'Memulihkan sesi admin...';
+                bootInfo.className = 'text-center text-xs font-semibold text-blue-500 mt-3 min-h-[1rem]';
+            }
+            serverCall('getDashboardData', [token], function (res) {
+                if (res.status === 'success') {
+                    enterDashboard(res);
+                } else {
+                    storage.del(TOKEN_KEY);
+                    token = '';
+                    if (bootInfo) {
+                        bootInfo.textContent = 'Silakan login admin.';
+                        bootInfo.className = 'text-center text-xs font-semibold text-gray-500 mt-3 min-h-[1rem]';
+                    }
+                }
+            }, true);
+        } else {
+            serverCall('getBackendVersion', [], function (res) {
+                var st = $('backendStatus');
+                if (st) {
+                    st.textContent = 'Backend v' + String(res) + ' terdeteksi';
+                    st.className = 'text-center text-[10px] mt-2 font-bold text-green-600';
+                }
+            }, true);
+        }
+    </script>
+</body>
+</html>
